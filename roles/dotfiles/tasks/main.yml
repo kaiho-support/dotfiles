@@ -1,0 +1,107 @@
+---
+- name: Ensure stow is installed
+  apt:
+    name: stow
+    state: present
+  become: yes
+  tags: ['dotfiles']
+
+- name: Check if project dotfiles exist
+  stat:
+    path: "{{ playbook_dir }}/dotfiles"
+  register: project_dotfiles
+  tags: ['dotfiles']
+
+- name: Create user dotfiles directory
+  file:
+    path: "{{ target_home }}/dotfiles"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: yes
+  tags: ['dotfiles']
+
+- name: Copy dotfiles from project to user directory
+  copy:
+    src: "{{ playbook_dir }}/dotfiles/"
+    dest: "{{ target_home }}/dotfiles/"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: preserve
+  become: yes
+  when: project_dotfiles.stat.exists
+  tags: ['dotfiles']
+
+- name: Check if dotfiles packages exist
+  stat:
+    path: "{{ target_home }}/dotfiles/{{ item }}"
+  loop: "{{ dotfiles_packages }}"
+  register: dotfiles_check
+  tags: ['dotfiles']
+
+- name: Check for conflicting dotfiles in home directory
+  find:
+    paths: "{{ target_home }}"
+    patterns:
+      - ".gitconfig"
+      - ".zshrc"
+      - ".vimrc"
+      - ".tmux.conf"
+    file_type: file
+    hidden: yes
+  register: existing_dotfiles
+  tags: ['dotfiles']
+
+- name: Create backup directory for existing dotfiles
+  file:
+    path: "{{ target_home }}/.dotfiles_backup"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  when: existing_dotfiles.files | length > 0
+  tags: ['dotfiles']
+
+- name: Backup existing dotfiles
+  copy:
+    src: "{{ item.path }}"
+    dest: "{{ target_home }}/.dotfiles_backup/{{ item.path | basename }}.backup"
+    remote_src: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: preserve
+  loop: "{{ existing_dotfiles.files }}"
+  when: existing_dotfiles.files | length > 0
+  tags: ['dotfiles']
+
+- name: Remove conflicting dotfiles to allow stow
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ existing_dotfiles.files }}"
+  when: existing_dotfiles.files | length > 0
+  tags: ['dotfiles']
+
+- name: Apply stow for existing dotfiles packages
+  shell: "stow -d {{ target_home }}/dotfiles -t {{ target_home }} {{ item.item }}"
+  loop: "{{ dotfiles_check.results }}"
+  when: item.stat.exists and project_dotfiles.stat.exists
+  become_user: "{{ target_user }}"
+  register: stow_result
+  changed_when: stow_result.rc == 0
+  failed_when: stow_result.rc != 0 and 'already stowed' not in stow_result.stderr and 'would cause conflicts' not in stow_result.stderr
+  tags: ['dotfiles']
+
+- name: Display backup information
+  debug:
+    msg: "Backed up existing dotfiles to {{ target_home }}/.dotfiles_backup/"
+  when: existing_dotfiles.files | length > 0
+  tags: ['dotfiles']
+
+- name: Display stow results
+  debug:
+    msg: "Stowed {{ item.item.item }} dotfiles"
+  loop: "{{ stow_result.results }}"
+  when: item.changed is defined and item.changed
+  tags: ['dotfiles']

@@ -1,0 +1,42 @@
+---
+- name: Check Homebrew installation
+  stat:
+    path: "{{ homebrew_bin }}"
+  register: homebrew_exists
+  tags: ['tools-cli', 'tools-git']
+
+- name: Fail if Homebrew is not available
+  fail:
+    msg: "Homebrew is not installed at {{ homebrew_bin }}. Please install Homebrew first or run with the 'homebrew' tag."
+  when: not homebrew_exists.stat.exists
+  tags: ['tools-cli', 'tools-git']
+
+- name: Install CLI tools via Homebrew individually
+  shell: "{{ homebrew_bin }} install {{ item }}"
+  environment:
+    PATH: "{{ homebrew_path }}/bin:{{ ansible_env.PATH }}"
+  become_user: "{{ target_user }}"
+  loop: "{{ selected_cli_tools | default(cli_tools) }}"
+  register: brew_install_results
+  changed_when: "'already installed' not in brew_install_results.stderr"
+  failed_when: brew_install_results.rc != 0 and 'already installed' not in brew_install_results.stderr
+  when: homebrew_exists.stat.exists
+  tags: ['tools-cli', 'tools-git']
+
+- name: Verify installed tools
+  shell: "{{ homebrew_bin }} list --versions {{ item }}"
+  environment:
+    PATH: "{{ homebrew_path }}/bin:{{ ansible_env.PATH }}"
+  become_user: "{{ target_user }}"
+  loop: "{{ selected_cli_tools | default(cli_tools) }}"
+  register: tool_versions
+  failed_when: false
+  when: homebrew_exists.stat.exists
+  tags: ['tools-cli', 'tools-git']
+
+- name: Display installed tool versions
+  debug:
+    msg: "{{ item.stdout }}"
+  loop: "{{ tool_versions.results }}"
+  when: item.stdout is defined and tool_versions.results is defined
+  tags: ['tools-cli', 'tools-git']

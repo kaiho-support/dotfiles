@@ -1,0 +1,66 @@
+# Ansible
+*.retry
+.vault_password
+.vault_pass
+ansible.log
+.ansible/
+galaxy_install_info
+.galaxy_install_info
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Local environment files
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Local configuration overrides
+group_vars/local.yml
+host_vars/local.yml
+local_vars.yml
+secrets.yml
+
+# Test outputs
+test_output/
+test_results/
+
+# Dependencies
+node_modules/

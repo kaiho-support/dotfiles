@@ -1,0 +1,65 @@
+---
+# Global variables for all hosts
+
+# User configuration
+target_user: "{{ ansible_user_id }}"
+target_home: "{{ ansible_env.HOME }}"
+
+# Homebrew configuration
+homebrew_path: "/home/linuxbrew/.linuxbrew"
+homebrew_bin: "{{ homebrew_path }}/bin/brew"
+homebrew_shellenv_path: "{{ homebrew_bin }} shellenv"
+
+# Docker configuration
+docker_gpg_key_url: "https://download.docker.com/linux/ubuntu/gpg"
+docker_repository_base: "https://download.docker.com/linux/ubuntu"
+docker_keyring_path: "/etc/apt/keyrings/docker.gpg"
+docker_sources_dir: "/etc/apt/sources.list.d"
+
+# System paths
+apt_keyrings_dir: "/etc/apt/keyrings"
+apt_sources_dir: "/etc/apt/sources.list.d"
+
+# Logging configuration
+ansible_log_path: "/var/log/ansible.log"
+
+# Development tools to install via APT
+dev_packages:
+  - git
+  - curl
+  - wget
+  - vim
+  - tmux
+  - zsh
+  - stow
+  - build-essential
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# CLI tools to install via Homebrew
+cli_tools:
+  - lsd
+  - bat
+  - fzf
+  - ripgrep
+  - eza
+  - fd
+  - git-delta
+  - lazygit
+  - gh
+
+# Dotfiles packages for stow
+dotfiles_packages:
+  - git
+  - zsh
+  - vim
+  - tmux
+
+# User preferences
+user_preferences:
+  shell: zsh        # zsh or bash
+  editor: vim       # vim, nano, or code
+  theme: dark       # dark or light
+  git_default_branch: main
+  enable_auto_aliases: true

@@ -1,0 +1,60 @@
+---
+- name: Set default shell
+  user:
+    name: "{{ target_user }}"
+    shell: "/usr/bin/{{ user_preferences.shell }}"
+  become: yes
+  tags: ['preferences']
+
+- name: Configure Git default branch
+  git_config:
+    name: init.defaultBranch
+    value: "{{ user_preferences.git_default_branch }}"
+    scope: global
+  become_user: "{{ target_user }}"
+  tags: ['preferences']
+
+- name: Configure Git editor
+  git_config:
+    name: core.editor
+    value: "{{ user_preferences.editor }}"
+    scope: global
+  become_user: "{{ target_user }}"
+  tags: ['preferences']
+
+- name: Apply theme preferences to zsh config
+  lineinfile:
+    path: "{{ target_home }}/.zshrc"
+    line: "# Theme: {{ user_preferences.theme }}"
+    create: yes
+  become_user: "{{ target_user }}"
+  when: user_preferences.shell == "zsh"
+  tags: ['preferences']
+
+- name: Enable auto aliases if configured
+  blockinfile:
+    path: "{{ target_home }}/.{{ user_preferences.shell }}rc"
+    block: |
+      # Auto aliases enabled by user preferences
+      if [ "{{ user_preferences.enable_auto_aliases }}" = "true" ]; then
+          # Enable color support
+          alias ls='ls --color=auto'
+          alias grep='grep --color=auto'
+          alias fgrep='fgrep --color=auto'
+          alias egrep='egrep --color=auto'
+          
+          # Safety aliases
+          alias rm='rm -i'
+          alias cp='cp -i'
+          alias mv='mv -i'
+          
+          # Useful shortcuts
+          alias ll='ls -alF'
+          alias la='ls -A'
+          alias l='ls -CF'
+      fi
+    marker: "# {mark} ANSIBLE MANAGED AUTO ALIASES"
+    create: yes
+  become_user: "{{ target_user }}"
+  when: user_preferences.enable_auto_aliases
+  tags: ['preferences']

@@ -1,0 +1,22 @@
+---
+# Configuration for ansible-lint
+
+exclude_paths:
+  - .cache/
+  - .github/
+  - tests/
+
+# Enable specific rules
+enable_list:
+  - yaml
+
+# Skip specific rules that may not apply
+skip_list:
+  - yaml[line-length]  # We handle this in yamllint
+  - name[casing]       # Allow flexible naming
+
+# Use offline mode to avoid issues with external dependencies
+offline: true
+
+# Set the minimum required Ansible version
+min_ansible_version: "2.9"

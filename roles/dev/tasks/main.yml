@@ -1,0 +1,150 @@
+---
+- name: Find Docker repository files
+  find:
+    paths: "{{ apt_sources_dir }}"
+    patterns: "*.list"
+    contains: "download.docker.com"
+  register: docker_repo_files
+  become: yes
+  tags: ['dev-docker']
+
+- name: Remove Docker repository files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  become: yes
+  loop: "{{ docker_repo_files.files }}"
+  tags: ['dev-docker']
+
+- name: Find Docker-specific source files
+  find:
+    paths: "{{ apt_sources_dir }}"
+    patterns: "*docker*"
+    file_type: file
+  register: docker_source_files
+  become: yes
+  tags: ['dev-docker']
+
+- name: Remove Docker-specific source files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  become: yes
+  loop: "{{ docker_source_files.files }}"
+  tags: ['dev-docker']
+
+- name: Find existing Docker GPG keys
+  find:
+    paths: "{{ apt_keyrings_dir }}"
+    patterns: "docker.*"
+  register: docker_keys
+  become: yes
+  tags: ['dev-docker']
+
+- name: Remove existing Docker GPG keys
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  become: yes
+  loop: "{{ docker_keys.files }}"
+  tags: ['dev-docker']
+
+- name: Update APT package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+  tags: ['dev-basic', 'dev-docker']
+
+- name: Install development packages
+  apt:
+    name: "{{ dev_packages }}"
+    state: present
+  become: yes
+  tags: ['dev-basic']
+
+- name: Create keyrings directory
+  file:
+    path: "{{ apt_keyrings_dir }}"
+    state: directory
+    mode: '0755'
+  become: yes
+  tags: ['dev-docker']
+
+- name: Download and install Docker GPG key
+  shell: |
+    curl -fsSL {{ docker_gpg_key_url }} | gpg --dearmor -o {{ docker_keyring_path }}
+    chmod 644 {{ docker_keyring_path }}
+  become: yes
+  register: docker_key_result
+  failed_when: docker_key_result.rc != 0
+  tags: ['dev-docker']
+
+- name: Get system architecture
+  shell: "dpkg --print-architecture"
+  register: system_arch
+  changed_when: false
+  tags: ['dev-docker']
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch={{ system_arch.stdout }} signed-by={{ docker_keyring_path }}] {{ docker_repository_base }} {{ ansible_distribution_release }} stable"
+    state: present
+    update_cache: no
+  become: yes
+  tags: ['dev-docker']
+
+- name: Update APT cache after Docker repository setup
+  apt:
+    update_cache: yes
+  become: yes
+  tags: ['dev-docker']
+
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  become: yes
+  tags: ['dev-docker']
+
+- name: Add user to docker group
+  user:
+    name: "{{ target_user }}"
+    groups: docker
+    append: yes
+  become: yes
+  tags: ['dev-docker']
+
+- name: Start and enable Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+  tags: ['dev-docker']
+
+- name: Check if Docker is already installed
+  shell: docker --version 2>/dev/null || echo "not_installed"
+  become_user: "{{ target_user }}"
+  register: docker_check
+  changed_when: false
+  failed_when: false
+  tags: ['dev-docker']
+
+- name: Verify Docker installation
+  shell: docker --version
+  become_user: "{{ target_user }}"
+  register: docker_version
+  when: docker_check.stdout != "not_installed"
+  tags: ['dev-docker']
+
+- name: Display Docker version
+  debug:
+    msg: "Docker installed successfully: {{ docker_version.stdout }}"
+  when: docker_version is defined and docker_version.stdout is defined
+  tags: ['dev-docker']

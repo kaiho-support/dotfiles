@@ -1,0 +1,3 @@
+---
+# Dotfiles role variables
+dotfiles_directory: "{{ target_home }}/dotfiles"

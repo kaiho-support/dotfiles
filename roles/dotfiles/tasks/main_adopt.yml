@@ -1,0 +1,67 @@
+---
+- name: Ensure stow is installed
+  apt:
+    name: stow
+    state: present
+  become: yes
+  tags: ['dotfiles']
+
+- name: Check if project dotfiles exist
+  stat:
+    path: "{{ playbook_dir }}/dotfiles"
+  register: project_dotfiles
+  tags: ['dotfiles']
+
+- name: Create user dotfiles directory
+  file:
+    path: "{{ target_home }}/dotfiles"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: yes
+  tags: ['dotfiles']
+
+- name: Copy dotfiles from project to user directory
+  copy:
+    src: "{{ playbook_dir }}/dotfiles/"
+    dest: "{{ target_home }}/dotfiles/"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: preserve
+  become: yes
+  when: project_dotfiles.stat.exists
+  tags: ['dotfiles']
+
+- name: Check if dotfiles packages exist
+  stat:
+    path: "{{ target_home }}/dotfiles/{{ item }}"
+  loop: "{{ dotfiles_packages }}"
+  register: dotfiles_check
+  tags: ['dotfiles']
+
+- name: Apply stow with --adopt to handle conflicts
+  shell: "stow -d {{ target_home }}/dotfiles -t {{ target_home }} --adopt {{ item.item }}"
+  loop: "{{ dotfiles_check.results }}"
+  when: item.stat.exists and project_dotfiles.stat.exists
+  become_user: "{{ target_user }}"
+  register: stow_result
+  changed_when: stow_result.rc == 0
+  failed_when: stow_result.rc != 0
+  tags: ['dotfiles']
+
+- name: Display stow results
+  debug:
+    msg: "Stowed {{ item.item.item }} dotfiles with --adopt (existing files moved to dotfiles directory)"
+  loop: "{{ stow_result.results }}"
+  when: item.changed is defined and item.changed
+  tags: ['dotfiles']
+
+- name: Show adoption notice
+  debug:
+    msg: |
+      Note: The --adopt option was used, which means:
+      - Existing dotfiles were moved into the dotfiles directory
+      - Symlinks now point to the dotfiles directory
+      - Your existing configurations are preserved but now managed by stow
+  tags: ['dotfiles']

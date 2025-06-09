@@ -1,0 +1,45 @@
+---
+- name: Ubuntu Development Environment Setup
+  hosts: localhost
+  become: no
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Check if Docker repository sources exist
+      stat:
+        path: "{{ item }}"
+      register: docker_sources_check
+      loop:
+        - /etc/apt/sources.list.d/docker.list
+        - /etc/apt/sources.list.d/docker-ce.list
+        - /etc/apt/keyrings/docker.asc
+      tags: ['dev-docker']
+
+    - name: Clean up conflicting Docker repository sources
+      file:
+        path: "{{ item.item }}"
+        state: absent
+      become: yes
+      loop: "{{ docker_sources_check.results }}"
+      when: item.stat.exists
+      tags: ['dev-docker']
+
+    - name: Update APT cache after cleanup
+      apt:
+        update_cache: yes
+      become: yes
+      failed_when: false
+      changed_when: false
+      tags: ['dev-docker']
+
+  roles:
+    - role: brew
+      tags: ['homebrew']
+    - role: dev
+      tags: ['dev-basic', 'dev-docker', 'dev']
+    - role: tools
+      tags: ['tools', 'tools-cli', 'tools-git']
+    - role: preferences
+      tags: ['preferences']
+    - role: dotfiles
+      tags: ['dotfiles']

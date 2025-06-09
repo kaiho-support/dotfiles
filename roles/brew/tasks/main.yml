@@ -1,0 +1,73 @@
+---
+- name: Install Homebrew dependencies
+  apt:
+    name:
+      - build-essential
+      - procps
+      - curl
+      - file
+      - git
+    state: present
+    update_cache: yes
+  become: yes
+  tags: ['homebrew']
+
+- name: Check if Homebrew is already installed
+  stat:
+    path: "{{ homebrew_bin }}"
+  register: homebrew_check
+  tags: ['homebrew']
+
+- name: Download and install Homebrew
+  shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  environment:
+    NONINTERACTIVE: 1
+  become_user: "{{ target_user }}"
+  when: not homebrew_check.stat.exists
+  tags: ['homebrew']
+
+- name: Detect user's default shell
+  shell: "getent passwd {{ target_user }} | cut -d: -f7"
+  register: user_shell
+  tags: ['homebrew']
+
+- name: Add Homebrew to PATH in .bashrc
+  lineinfile:
+    path: "{{ target_home }}/.bashrc"
+    line: 'eval "$({{ homebrew_bin }} shellenv)"'
+    create: yes
+  become_user: "{{ target_user }}"
+  when: user_shell.stdout.endswith('/bash')
+  tags: ['homebrew']
+
+- name: Add Homebrew to PATH in .zshrc
+  lineinfile:
+    path: "{{ target_home }}/.zshrc"
+    line: 'eval "$({{ homebrew_bin }} shellenv)"'
+    create: yes
+  become_user: "{{ target_user }}"
+  when: user_shell.stdout.endswith('/zsh')
+  tags: ['homebrew']
+
+- name: Add Homebrew to PATH in .profile (fallback)
+  lineinfile:
+    path: "{{ target_home }}/.profile"
+    line: 'eval "$({{ homebrew_bin }} shellenv)"'
+    create: yes
+  become_user: "{{ target_user }}"
+  when: not (user_shell.stdout.endswith('/bash') or user_shell.stdout.endswith('/zsh'))
+  tags: ['homebrew']
+
+- name: Verify Homebrew installation
+  shell: "{{ homebrew_bin }} --version"
+  environment:
+    PATH: "{{ homebrew_path }}/bin:{{ ansible_env.PATH }}"
+  become_user: "{{ target_user }}"
+  register: brew_version
+  tags: ['homebrew']
+
+- name: Display Homebrew version
+  debug:
+    msg: "Homebrew installed successfully: {{ brew_version.stdout }}"
+  tags: ['homebrew']

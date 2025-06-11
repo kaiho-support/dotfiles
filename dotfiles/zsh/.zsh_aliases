@@ -74,3 +74,7 @@ alias ~='cd ~'
 alias df='df -h'
 alias du='du -h'
 alias free='free -h'
+
+# Claude Code
+alias cc='claude'
+alias cca='claude --dangerously-skip-permissions'

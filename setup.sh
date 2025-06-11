@@ -137,7 +137,7 @@ show_main_menu() {
         "homebrew" "Homebrew package manager" ON \
         "dev-basic" "Basic development tools (git, curl, etc.)" ON \
         "dev-docker" "Docker and Docker Compose" ON \
-        "tools-cli" "Modern CLI tools (lsd, bat, fzf, etc.)" ON \
+        "tools-cli" "Modern CLI tools (bat, fzf, eza, etc.)" ON \
         "tools-git" "Git tools (lazygit, gh, delta)" ON \
         "dotfiles" "Dotfiles management with stow" ON \
         3>&1 1>&2 2>&3)
@@ -153,14 +153,13 @@ show_main_menu() {
 show_cli_tools_menu() {
     # Check for non-interactive mode
     if [ "$NON_INTERACTIVE" = "true" ]; then
-        echo '"lsd" "bat" "fzf" "ripgrep" "eza" "fd"'
+        echo '"bat" "fzf" "ripgrep" "eza" "fd"'
         return 0
     fi
     
     local choices
     choices=$(whiptail --title "CLI Tools Selection" \
         --checklist "Select CLI tools to install:" 20 80 10 \
-        "lsd" "Modern ls replacement with colors and icons" ON \
         "bat" "Cat clone with syntax highlighting" ON \
         "fzf" "Command-line fuzzy finder" ON \
         "ripgrep" "Fast text search tool" ON \

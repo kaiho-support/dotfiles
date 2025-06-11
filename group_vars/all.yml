@@ -39,7 +39,6 @@ dev_packages:
 
 # CLI tools to install via Homebrew
 cli_tools:
-  - lsd
   - bat
   - fzf
   - ripgrep

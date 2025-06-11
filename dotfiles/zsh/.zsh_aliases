@@ -12,13 +12,6 @@ alias cp='cp -i'
 alias mv='mv -i'
 
 # Modern CLI tools aliases (conditional based on availability)
-if command -v lsd > /dev/null; then
-    alias ls='lsd'
-    alias lt='lsd --tree'
-    alias ll='lsd -alF'
-    alias la='lsd -A'
-    alias l='lsd -CF'
-fi
 
 if command -v bat > /dev/null; then
     alias cat='bat'
@@ -26,9 +19,8 @@ if command -v bat > /dev/null; then
 fi
 
 if command -v eza > /dev/null; then
-    alias ez='eza'
-    alias ezl='eza -l'
-    alias eza-tree='eza --tree'
+    alias ll='eza -l --icons'
+    alias lt='eza -l --tree --icons'
 fi
 
 if command -v fd > /dev/null; then

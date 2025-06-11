@@ -1,0 +1,32 @@
+# Prompt Configuration
+
+# Starship prompt (if available)
+if command -v starship > /dev/null; then
+    eval "$(starship init zsh)"
+else
+    # Fallback custom prompt
+    autoload -U colors && colors
+    
+    # Git prompt function
+    git_prompt_info() {
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+            local branch=$(git branch --show-current 2>/dev/null)
+            local status=""
+            
+            # Check for uncommitted changes
+            if ! git diff-index --quiet HEAD --; then
+                status="*"
+            fi
+            
+            # Check for untracked files
+            if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+                status="${status}+"
+            fi
+            
+            echo " %F{yellow}($branch$status)%f"
+        fi
+    }
+    
+    # Set prompt
+    PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$(git_prompt_info)$ '
+fi

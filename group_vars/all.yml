@@ -48,6 +48,7 @@ cli_tools:
   - git-delta
   - lazygit
   - gh
+  - starship
 
 # Dotfiles packages for stow
 dotfiles_packages:

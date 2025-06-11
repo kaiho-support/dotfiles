@@ -1,0 +1,11 @@
+# Environment Variables and Path Configuration
+
+# History configuration
+export HISTFILE=~/.zsh_history
+export HISTSIZE=10000
+export SAVEHIST=10000
+
+# Homebrew setup
+if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi

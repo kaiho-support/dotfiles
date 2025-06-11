@@ -1,42 +1,30 @@
-# Path to your oh-my-zsh installation (if using)
-# export ZSH="$HOME/.oh-my-zsh"
+# Zsh Configuration - Main Entry Point
+# This file sources modular configuration files for better organization
 
-# Basic zsh configuration
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
+# Basic zsh options
 setopt HIST_IGNORE_DUPS
 setopt HIST_FIND_NO_DUPS
 setopt SHARE_HISTORY
+setopt AUTO_CD
+setopt CORRECT
+setopt EXTENDED_GLOB
 
-# Enable completion
+# Enable completion system
 autoload -Uz compinit
 compinit
 
-# Homebrew setup
-if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
+# Source configuration modules
+source ~/.zsh_env      # Environment variables and paths
+source ~/.zsh_aliases  # Command aliases
+source ~/.zsh_functions # Custom functions
+source ~/.zsh_prompt   # Prompt configuration
 
-# Aliases
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias grep='grep --color=auto'
-
-# Modern CLI tools aliases (if installed via brew)
-if command -v lsd > /dev/null; then
-    alias ls='lsd'
-fi
-
-if command -v bat > /dev/null; then
-    alias cat='bat'
-fi
-
+# Tool-specific configurations
 if command -v fzf > /dev/null; then
-    # fzf key bindings
+    # fzf key bindings and completion
     source <(fzf --zsh)
 fi
 
-# Prompt
-PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
+# Path to your oh-my-zsh installation (if using)
+# export ZSH="$HOME/.oh-my-zsh"
+# Uncomment and configure if you want to use oh-my-zsh

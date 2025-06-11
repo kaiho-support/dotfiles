@@ -56,6 +56,7 @@ dotfiles_packages:
   - zsh
   - vim
   - tmux
+  - starship
 
 # User preferences
 user_preferences:

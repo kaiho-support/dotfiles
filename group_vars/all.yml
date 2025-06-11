@@ -36,6 +36,7 @@ dev_packages:
   - ca-certificates
   - gnupg
   - lsb-release
+  - dnsutils
 
 # CLI tools to install via Homebrew
 cli_tools:

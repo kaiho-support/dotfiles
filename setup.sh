@@ -169,6 +169,7 @@ show_cli_tools_menu() {
         "lazygit" "Simple terminal UI for git commands" OFF \
         "gh" "GitHub CLI tool" OFF \
         "starship" "Cross-shell prompt with customization" OFF \
+        "ghq" "Git repository manager" OFF \
         3>&1 1>&2 2>&3)
     
     if [ $? -eq 0 ]; then

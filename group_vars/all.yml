@@ -49,6 +49,7 @@ cli_tools:
   - lazygit
   - gh
   - starship
+  - ghq
 
 # Dotfiles packages for stow
 dotfiles_packages:

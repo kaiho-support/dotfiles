@@ -116,11 +116,15 @@ repo() {
         "get"|"g")
             # Clone/get a new repository
             if [[ -z "$2" ]]; then
-                echo "Usage: repo get <repository_url>"
-                echo "Example: repo get github.com/user/repo"
-                return 1
+                # Interactive mode: show remote repositories via gh + fzf
+                local selected_repo
+                selected_repo=$(gh repo list --limit 100 --json nameWithOwner --jq '.[].nameWithOwner' | fzf --height=50% --border --preview="gh repo view {} --json description,url,pushedAt --template '{{.description}}\n{{.url}}\nLast updated: {{.pushedAt}}'" --preview-window=down:5:wrap --prompt="Select repository to clone: ")
+                if [[ -n "$selected_repo" ]]; then
+                    ghq get "github.com/$selected_repo"
+                fi
+            else
+                ghq get "$2"
             fi
-            ghq get "$2"
             ;;
         "create"|"new"|"n")
             # Create a new repository directory
@@ -167,7 +171,7 @@ Commands:
   list, l         List repositories with fzf selection
   cd, c           Change directory to selected repository
   remove, rm, r   Remove selected repository (with confirmation)
-  get, g <url>    Clone/get a new repository
+  get, g [url]    Clone repository (interactive if no url)
   create, new, n  Create and initialize a new repository
   open, o [editor] Open repository in editor (default: code)
   help, h         Show this help message
@@ -175,6 +179,7 @@ Commands:
 Examples:
   repo                    # List repositories
   repo cd                 # Change to selected repository
+  repo get                # Interactive repository selection
   repo get github.com/user/repo
   repo create github.com/user/new-repo
   repo remove             # Remove selected repository
@@ -182,7 +187,7 @@ Examples:
   repo open vim           # Open repository in vim
   repo open nvim          # Open repository in neovim
 
-Requirements: ghq, fzf, git
+Requirements: ghq, fzf, git, gh (for interactive get)
 EOF
             ;;
     esac

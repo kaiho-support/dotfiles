@@ -90,7 +90,10 @@
   become_user: "{{ target_user }}"
   register: stow_result
   changed_when: stow_result.rc == 0
-  failed_when: stow_result.rc != 0 and 'already stowed' not in stow_result.stderr and 'would cause conflicts' not in stow_result.stderr
+  failed_when: >
+    stow_result.rc != 0 and
+    'already stowed' not in stow_result.stderr and
+    'would cause conflicts' not in stow_result.stderr
   tags: ['dotfiles']
 
 - name: Display backup information

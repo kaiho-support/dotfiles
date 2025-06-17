@@ -42,12 +42,12 @@
           alias grep='grep --color=auto'
           alias fgrep='fgrep --color=auto'
           alias egrep='egrep --color=auto'
-          
+
           # Safety aliases
           alias rm='rm -i'
           alias cp='cp -i'
           alias mv='mv -i'
-          
+
           # Useful shortcuts
           alias ll='ls -alF'
           alias la='ls -A'

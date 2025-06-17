@@ -2,4 +2,6 @@
 # Development tools role variables
 docker_gpg_url: "https://download.docker.com/linux/ubuntu/gpg"
 docker_gpg_keyring: "/etc/apt/keyrings/docker.gpg"
-docker_repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu"
+docker_repo: >-
+  deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg]
+  https://download.docker.com/linux/ubuntu

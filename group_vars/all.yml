@@ -51,6 +51,10 @@ cli_tools:
   - starship
   - ghq
 
+# Node.js configuration
+nodejs_nvm_version: "0.40.3"
+nodejs_version: "22"
+
 # Dotfiles packages for stow
 dotfiles_packages:
   - git

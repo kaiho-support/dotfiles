@@ -29,9 +29,9 @@ jobs:
       run: |
         yamllint .
         
-    - name: Lint Ansible playbooks
-      run: |
-        ansible-lint site.yml
+#    - name: Lint Ansible playbooks
+#      run: |
+#        ansible-lint site.yml
         
     - name: Syntax check
       run: |

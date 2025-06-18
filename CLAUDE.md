@@ -1,107 +1,159 @@
-# Working with Ubuntu Dev Setup using Claude Code
+# CLAUDE.md
 
-This document provides guidance for using Claude Code to work with this Ubuntu development environment setup repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository Overview
+## Architecture Overview
 
-This repository contains an Ansible-based automation system for setting up Ubuntu development environments. Key components include:
+This is an Ansible-based Ubuntu development environment setup system with an interactive whiptail installer. The architecture follows a modular role-based design with comprehensive testing infrastructure.
 
-- **Ansible Playbooks**: Automated installation and configuration
-- **Dotfiles Management**: GNU Stow-based configuration management
-- **Interactive Setup**: User-friendly installation wizard
-- **Modular Design**: Role-based component organization
+**Core workflow**: `setup.sh` → Interactive selection → Dynamic Ansible tag generation → Role execution → Post-install guidance
 
-## Key Files and Directories
+## Essential Commands
 
-### Core Files
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/site.yml` - Main Ansible playbook
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/setup.sh` - Interactive installation script
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/ansible.cfg` - Ansible configuration
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/inventory.yml` - Ansible inventory
+### Installation and Testing
+```bash
+# Interactive installer (main entry point)
+./setup.sh
 
-### Configuration
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/group_vars/all.yml` - Global variables and tool definitions
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/dotfiles/` - Configuration files for various tools
+# Non-interactive mode for automation
+./setup.sh --non-interactive
 
-### Roles Structure
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/brew/` - Homebrew installation and management
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/dev/` - Development tools (git, docker, build tools)
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/tools/` - CLI tools and utilities
-- `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/dotfiles/` - Dotfiles management with GNU Stow
+# Test mode (dry run)
+./setup.sh --test
 
-## Common Tasks with Claude Code
+# Manual Ansible execution
+ansible-playbook site.yml --tags homebrew,dev-basic
+ansible-playbook site.yml --check  # dry run
+ansible-playbook site.yml --syntax-check
 
-### Adding New Tools
+# Run comprehensive test suite
+./tests/test_runner.sh
+./tests/test_runner.sh --role tools  # test specific role
+```
 
-To add a new CLI tool via Homebrew:
-1. Edit `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/group_vars/all.yml` to add the tool to relevant lists
-2. Update the interactive menu in `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/setup.sh` if needed
-3. Modify role tasks in `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/tools/tasks/main.yml`
+### Development Commands
+```bash
+# Validate all Ansible syntax
+find . -name "*.yml" -exec ansible-playbook {} --syntax-check \;
 
-### Managing Dotfiles
+# Test individual roles
+ansible-playbook site.yml --tags specific-tag --check
 
-Dotfiles are organized in `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/dotfiles/` with subdirectories for each application:
-- `git/` - Git configuration
-- `zsh/` - Zsh shell configuration
-- `vim/` - Vim editor configuration
-- `tmux/` - Terminal multiplexer configuration
+# Run security and integration tests
+./tests/test_runner.sh --type security
+./tests/test_runner.sh --type integration
+```
 
-To add new dotfiles:
-1. Create appropriate subdirectory structure
+## Role Architecture
+
+The system uses 5 main Ansible roles with specific responsibilities:
+
+- **`brew`**: Homebrew installation and PATH configuration
+- **`dev`**: Core development tools (APT packages, Docker with GPG verification)
+- **`tools`**: Modern CLI utilities via Homebrew with async batch installation
+- **`preferences`**: Shell configuration and user settings
+- **`dotfiles`**: GNU Stow-based configuration management with backup/rollback
+
+### Key Architectural Patterns
+
+**Dynamic Variable Generation**: `setup.sh` creates runtime variables for selective CLI tool installation:
+```bash
+# Generated in setup.sh based on user selection
+install_bat: true
+install_fzf: false
+```
+
+**Tag-Based Modular Execution**: Each component maps to specific Ansible tags:
+- `homebrew`, `dev-basic`, `dev-docker`, `tools-cli`, `tools-git`, `preferences`, `dotfiles`
+
+**Dotfiles Management**: Uses GNU Stow with conflict resolution:
+- Organized by application in `dotfiles/` subdirectories
+- Automatic backup to `.dotfiles_backup/` before applying
+- Rollback capability for failed installations
+
+## Configuration Files
+
+### Primary Configuration
+- `group_vars/all.yml`: Global tool lists, user preferences, and system paths
+- `site.yml`: Main playbook orchestrating all roles
+- `setup.sh`: Interactive installer with input validation and error handling
+
+### Role Structure
+Each role follows standard Ansible structure:
+```
+roles/[role-name]/
+├── tasks/main.yml      # Main execution logic
+├── vars/main.yml       # Role-specific variables
+└── handlers/main.yml   # Event-driven tasks
+```
+
+## Adding New Components
+
+### Adding CLI Tools
+1. Edit `group_vars/all.yml` → add to appropriate tool lists
+2. Update `setup.sh` → modify CLI_TOOLS array and option mapping
+3. Modify `roles/tools/tasks/main.yml` → add conditional installation logic
+
+### Adding New Dotfiles
+1. Create subdirectory in `dotfiles/` (e.g., `dotfiles/neovim/`)
 2. Add configuration files
-3. Update `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/roles/dotfiles/tasks/main.yml` to include new stow packages
+3. Update `roles/dotfiles/tasks/main.yml` → include new stow package
+4. Add to dotfiles list in `group_vars/all.yml`
 
-### Modifying Installation Components
+### Creating New Roles
+1. Follow standard Ansible role structure
+2. Add to `site.yml` with appropriate tags
+3. Update `setup.sh` interactive menu if user-selectable
+4. Create corresponding tests in `tests/`
 
-The system uses Ansible tags for modular installation:
-- `homebrew` - Package manager setup
-- `dev-basic` - Core development tools
-- `dev-docker` - Docker and containerization
-- `tools-cli` - Command-line utilities
-- `tools-git` - Git-related tools
-- `dotfiles` - Configuration management
+## Testing Infrastructure
 
-### Testing Changes
+The repository includes a comprehensive test runner (`tests/test_runner.sh`) with:
 
-Before implementing changes:
-1. Test Ansible syntax: `ansible-playbook site.yml --syntax-check`
-2. Run in check mode: `ansible-playbook site.yml --check`
-3. Test specific components: `ansible-playbook site.yml --tags specific-tag --check`
+- **Syntax Tests**: Ansible YAML validation
+- **Role Tests**: Structure and task validation
+- **Integration Tests**: System dependency verification
+- **Security Tests**: Permission and sensitive data checks
 
-### Interactive Setup Customization
+**Test execution patterns**:
+```bash
+# Filter by test type
+./tests/test_runner.sh --type syntax
 
-The `/home/kaiho/ghq/github.com/kaiho/ubuntu-dev-setup/setup.sh` script provides a whiptail-based interface. To modify:
-1. Update the options arrays in the script
-2. Modify the tag mapping logic
-3. Adjust confirmation and execution flow
+# Filter by role
+./tests/test_runner.sh --role brew
 
-## Development Workflow
+# Full test suite with detailed logging
+./tests/test_runner.sh  # logs to tests/logs/test_TIMESTAMP.log
+```
 
-### Making Changes
-1. Always test changes in check mode first
-2. Use specific tags to test individual components
-3. Update documentation when adding new features
-4. Maintain the modular structure for flexibility
+## Important Implementation Details
 
-### Best Practices
-- Keep roles focused and single-purpose
-- Use meaningful variable names in group_vars
-- Maintain consistent file organization
-- Test on clean systems when possible
-- Document any manual post-installation steps
+### Interactive Setup Process
+`setup.sh` implements a sophisticated user experience:
+1. Prerequisites installation (curl, git, whiptail, ansible)
+2. Component selection via whiptail checklist
+3. CLI tools sub-menu with individual selection
+4. Confirmation dialog with selected components
+5. Dynamic Ansible execution with generated tags
 
-### Troubleshooting
-- Check Ansible logs for detailed error information
-- Verify prerequisites (sudo access, internet connection)
-- Test individual roles in isolation
-- Review variable definitions in group_vars
+### Security Considerations
+- Input validation and sanitization in `setup.sh`
+- GPG key verification for Docker repository setup
+- Proper file permissions and backup mechanisms
+- Error handling to prevent partial installations
 
-## File Patterns to Know
+### Variable Scope and Override
+- Global variables in `group_vars/all.yml`
+- Role-specific variables in `roles/*/vars/main.yml`
+- Runtime variables generated by `setup.sh`
+- Environment-specific overrides possible
 
-- `**/*.yml` - Ansible playbooks and configuration
-- `dotfiles/**/*` - User configuration files
-- `roles/*/tasks/main.yml` - Ansible role implementations
-- `roles/*/vars/main.yml` - Role-specific variables
-- `group_vars/all.yml` - Global configuration
+## Key File Locations
 
-This setup provides a robust foundation for automated Ubuntu development environment configuration with flexibility for customization and extension.
+- `group_vars/all.yml`: Central configuration hub - tool definitions, user preferences
+- `setup.sh`: Interactive installer with input validation and tag generation
+- `site.yml`: Main orchestration playbook
+- `dotfiles/`: Application-specific configuration files organized by tool
+- `roles/*/tasks/main.yml`: Core implementation logic for each component
+- `tests/test_runner.sh`: Comprehensive test orchestration

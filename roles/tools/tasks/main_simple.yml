@@ -7,7 +7,9 @@
 
 - name: Fail if Homebrew is not available
   fail:
-    msg: "Homebrew is not installed at {{ homebrew_bin }}. Please install Homebrew first or run with the 'homebrew' tag."
+    msg: >-
+      Homebrew is not installed at {{ homebrew_bin }}.
+      Please install Homebrew first or run with the 'homebrew' tag.
   when: not homebrew_exists.stat.exists
   tags: ['tools-cli', 'tools-git']
 

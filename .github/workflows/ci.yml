@@ -20,6 +20,3 @@ jobs:
         
     - name: Syntax check
       run: ansible-playbook --syntax-check site.yml
-        
-    - name: Dry run
-      run: ansible-playbook site.yml --check

@@ -1,0 +1,4 @@
+---
+# Node.js and NVM configuration
+nvm_version: "0.40.3"
+node_version: "22"

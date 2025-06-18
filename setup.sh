@@ -127,7 +127,7 @@ check_ansible() {
 show_main_menu() {
     # Check for non-interactive mode
     if [ "$NON_INTERACTIVE" = "true" ]; then
-        echo '"homebrew" "dev-basic" "dev-docker" "tools-cli" "tools-git" "dotfiles"'
+        echo '"homebrew" "dev-basic" "dev-docker" "nodejs" "tools-cli" "tools-git" "dotfiles"'
         return 0
     fi
     
@@ -137,6 +137,7 @@ show_main_menu() {
         "homebrew" "Homebrew package manager" ON \
         "dev-basic" "Basic development tools (git, curl, etc.)" ON \
         "dev-docker" "Docker and Docker Compose" ON \
+        "nodejs" "Node.js via NVM with pnpm" OFF \
         "tools-cli" "Modern CLI tools (bat, fzf, eza, etc.)" ON \
         "tools-git" "Git tools (lazygit, gh, delta)" ON \
         "dotfiles" "Dotfiles management with stow" ON \
@@ -196,6 +197,10 @@ generate_ansible_tags() {
     
     if [[ $selections == *"dev-docker"* ]]; then
         tags="${tags}dev-docker,"
+    fi
+    
+    if [[ $selections == *"nodejs"* ]]; then
+        tags="${tags}nodejs,"
     fi
     
     if [[ $selections == *"tools-cli"* ]]; then

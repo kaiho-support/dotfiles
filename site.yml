@@ -37,6 +37,8 @@
       tags: ['homebrew']
     - role: dev
       tags: ['dev-basic', 'dev-docker', 'dev']
+    - role: nodejs
+      tags: ['nodejs']
     - role: tools
       tags: ['tools', 'tools-cli', 'tools-git']
     - role: preferences
